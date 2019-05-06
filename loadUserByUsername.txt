@@ -1,0 +1,29 @@
+@Autowired
+UserRepository userRepository;
+ 
+public UserDetails loadUserByUsername(String name) 
+  throws UsernameNotFoundException {
+  
+    boolean enabled = true;
+    boolean accountNonExpired = true;
+    boolean credentialsNonExpired = true;
+    boolean accountNonLocked = true;
+    try {
+        User user = userRepository.findByEmail(name);
+        if (user == null) {
+            throw new UsernameNotFoundException(
+              "No user found with username: " + name);
+        }
+         
+        return new org.springframework.security.core.userdetails.User(
+          user.getEmail(), 
+          user.getPassword().toLowerCase(), 
+          user.isEnabled(), 
+          accountNonExpired, 
+          credentialsNonExpired, 
+          accountNonLocked, 
+          getAuthorities(user.getRole()));
+    } catch (Exception e) {
+        throw new RuntimeException(e);
+    }
+}

@@ -1,0 +1,27 @@
+@Autowired
+ApplicationEventPublisher eventPublisher
+ 
+@RequestMapping(value = "/user/registration", method = RequestMethod.POST)
+public ModelAndView registerUserAccount(
+  @ModelAttribute("user") @Valid UserDto accountDto, 
+  BindingResult result, 
+  WebRequest request, 
+  Errors errors) {
+  
+    if (result.hasErrors()) {
+        return new ModelAndView("registration", "user", accountDto);
+    }
+     
+    User registered = createUserAccount(accountDto);
+    if (registered == null) {
+        result.rejectValue("name", "message.regError");
+    }
+    try {
+        String appUrl = request.getContextPath();
+        eventPublisher.publishEvent(new OnRegistrationCompleteEvent
+          (registered, request.getLocale(), appUrl));
+    } catch (Exception me) {
+        return new ModelAndView("nameError", "user", accountDto);
+    }
+    return new ModelAndView("successRegister", "user", accountDto);
+}
